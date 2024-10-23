@@ -48,50 +48,66 @@ const App = () => {
     };
 
     return (
-        <div>
-            <h1>Hello, {guestId ? `Guest: ${guestId}` : 'Loading...'}</h1>
+        <div className="container mx-auto p-8">
+            <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
+                {guestId ? `Welcome, Guest: ${guestId}` : 'Loading...'}
+            </h1>
 
-            <h2>Products:</h2>
-            <div>
-                {products.length === 0 ? (
-                    <p>Loading products...</p>
-                ) : (
-                    products.map((product, index) => (
-                        <div key={index} style={{ marginBottom: '20px' }}>
-                            <p><strong>Name:</strong> {product.name}</p>
-                            <p><strong>Price:</strong> ${product.price}</p>
-                            <p><strong>In Cart:</strong> {product.in_cart ? 'Yes' : 'No'}</p>
-                            <input
-                                type="number"
-                                min="1"
-                                placeholder="Quantity"
-                                id={`quantity-${index}`}
-                            />
-                            <button
-                                onClick={() =>
-                                    addToCart(product, document.getElementById(`quantity-${index}`).value)
-                                }
-                                disabled={product.in_cart} // Disable button if product is already in cart
-                            >
-                                {product.in_cart ? 'Already in Cart' : 'Add to Cart'}
-                            </button>
-                        </div>
-                    ))
-                )}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Section: Products */}
+                <div className="bg-white shadow-lg rounded-lg p-8">
+                    <h2 className="text-2xl font-semibold text-gray-700 mb-6">Available Products</h2>
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2">
+                        {products.length === 0 ? (
+                            <p className="text-gray-500">Loading products...</p>
+                        ) : (
+                            products.map((product, index) => (
+                                <div key={index} className="bg-gray-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                                    <p className="text-lg font-bold text-gray-900 mb-2">{product.name}</p>
+                                    <p className="text-gray-700 mb-2">Price: ${product.price}</p>
+                                    <p className={`mb-2 ${product.in_cart ? 'text-green-600' : 'text-red-500'}`}>
+                                        {product.in_cart ? 'Already in Cart' : 'Not in Cart'}
+                                    </p>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        placeholder="Quantity"
+                                        id={`quantity-${index}`}
+                                        className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                    />
+                                    <button
+                                        onClick={() => addToCart(product, document.getElementById(`quantity-${index}`).value)}
+                                        disabled={product.in_cart}
+                                        className={`w-full p-3 rounded-lg font-semibold text-white transition ${
+                                            product.in_cart
+                                                ? 'bg-gray-400 cursor-not-allowed'
+                                                : 'bg-blue-500 hover:bg-blue-600 focus:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                                        }`}
+                                    >
+                                        {product.in_cart ? 'Already in Cart' : 'Add to Cart'}
+                                    </button>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Right Section: Cart */}
+                <div className="bg-white shadow-lg rounded-lg p-8">
+                    <h2 className="text-2xl font-semibold text-gray-700 mb-6">Your Cart</h2>
+                    {cart.length === 0 ? (
+                        <p className="text-gray-500">Your cart is empty.</p>
+                    ) : (
+                        <ul className="space-y-4">
+                            {cart.map((item, index) => (
+                                <li key={index} className="bg-gray-100 p-4 rounded-lg shadow-md">
+                                    {item.name} - {item.quantity} x ${item.price}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
             </div>
-
-            <h2>Cart:</h2>
-            {cart.length === 0 ? (
-                <p>Your cart is empty.</p>
-            ) : (
-                <ul>
-                    {cart.map((item, index) => (
-                        <li key={index}>
-                            {item.name} - {item.quantity} x ${item.price}
-                        </li>
-                    ))}
-                </ul>
-            )}
         </div>
     );
 };
