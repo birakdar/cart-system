@@ -8,7 +8,7 @@ Route::get('/', function () {
 });
 
 Route::prefix('carts')->name('carts.')->controller(CartController::class)->group(function () {
-    Route::get('/{guest_id}', 'index')->name('index');
+    Route::get('index/{guest_id}', 'index')->name('index');
     Route::post('add', 'add')->name('add');
     Route::post('remove', 'remove')->name('remove');
     Route::get('clear/{guest_id}', 'clear')->name('clear');
