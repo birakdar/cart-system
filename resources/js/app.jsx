@@ -9,7 +9,7 @@ const App = () => {
     const guestId = useSelector((state) => state.guest.guestId);
     const dispatch = useDispatch();
     const [products, setProducts] = useState([]);
-    const [cart, setCart] = useState([]);
+    const [cart, setCart] = useState([]); // Ensure cart is initialized as an empty array
 
     // Get the guest ID on first visit
     useEffect(() => {
@@ -25,7 +25,7 @@ const App = () => {
         }
     }, [guestId, dispatch]);
 
-    // Fetch products from the server after guestId is retrieved
+    // Fetch products and cart data after guestId is retrieved
     useEffect(() => {
         if (guestId) {
             axios.get(`/products/index/${guestId}`)
@@ -34,6 +34,15 @@ const App = () => {
                 })
                 .catch((error) => {
                     console.error('Error fetching products:', error);
+                });
+
+            axios.get(`/carts/index/${guestId}`)
+                .then((response) => {
+                    const cartData = response.data.cart || []; // Safely assign cart data
+                    setCart(cartData); // Update the cart state with fetched data
+                })
+                .catch((error) => {
+                    console.error('Error fetching cart:', error);
                 });
         }
     }, [guestId]);
@@ -95,7 +104,7 @@ const App = () => {
                 {/* Right Section: Cart */}
                 <div className="bg-white shadow-lg rounded-lg p-8">
                     <h2 className="text-2xl font-semibold text-gray-700 mb-6">Your Cart</h2>
-                    {cart.length === 0 ? (
+                    {cart && cart.length === 0 ? ( // Ensure cart is checked for null/undefined
                         <p className="text-gray-500">Your cart is empty.</p>
                     ) : (
                         <ul className="space-y-4">
