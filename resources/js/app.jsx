@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 import { store } from './store/store';
 import { setGuestId } from './store/guestSlice';
 
@@ -9,7 +10,7 @@ const App = () => {
     const guestId = useSelector((state) => state.guest.guestId);
     const dispatch = useDispatch();
     const [products, setProducts] = useState([]);
-    const [cart, setCart] = useState([]); // Ensure cart is initialized as an empty array
+    const [cart, setCart] = useState({}); // Initialize cart as an object
 
     // Get the guest ID on first visit
     useEffect(() => {
@@ -28,6 +29,7 @@ const App = () => {
     // Fetch products and cart data after guestId is retrieved
     useEffect(() => {
         if (guestId) {
+            // Fetch products
             axios.get(`/products/index/${guestId}`)
                 .then((response) => {
                     setProducts(response.data.products);
@@ -36,10 +38,11 @@ const App = () => {
                     console.error('Error fetching products:', error);
                 });
 
+            // Fetch cart
             axios.get(`/carts/index/${guestId}`)
                 .then((response) => {
-                    const cartData = response.data.cart || []; // Safely assign cart data
-                    setCart(cartData); // Update the cart state with fetched data
+                    const cartData = response.data.cart || {}; // Safely assign cart data, defaulting to an empty object
+                    setCart(cartData); // Set cart as the entire cart object
                 })
                 .catch((error) => {
                     console.error('Error fetching cart:', error);
@@ -48,12 +51,90 @@ const App = () => {
     }, [guestId]);
 
     // Handle Add to Cart
-    const addToCart = (product, quantity) => {
-        if (!quantity) return; // Ensure quantity is provided
+    const addToCart = (product) => {
+        const quantityInput = document.getElementById(`quantity-${product.id}`);
+        const quantity = quantityInput.value;
 
-        // Add product to cart logic (can be handled with API call to add the product)
-        setCart([...cart, { ...product, quantity }]);
-        alert(`${product.name} added to cart with quantity: ${quantity}`);
+        if (!quantity) {
+            Swal.fire({
+                title: 'Quantity Required',
+                text: 'Please enter a quantity before adding to cart.',
+                icon: 'warning',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        // Confirm adding to cart
+        Swal.fire({
+            title: 'Add to Cart',
+            text: `Are you sure you want to add ${product.name} with quantity ${quantity}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Call API to add product to cart
+                axios.post('/carts/add', {
+                    product_id: product.id,
+                    quantity: quantity,
+                    guest_id: guestId
+                })
+                    .then(() => {
+                        // Refresh cart after adding the item
+                        refreshCart();
+                        Swal.fire('Added!', `${product.name} has been added to your cart.`, 'success');
+                    })
+                    .catch((error) => {
+                        console.error('Error adding to cart:', error);
+                        Swal.fire('Error!', 'There was an error adding the product to your cart.', 'error');
+                    });
+            }
+        });
+    };
+
+    // Handle Remove from Cart
+    const removeFromCart = (product) => {
+        Swal.fire({
+            title: 'Remove from Cart',
+            text: `Are you sure you want to remove ${product.name} from your cart?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, remove it!',
+            cancelButtonText: 'No, keep it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Call API to remove product from cart
+                axios.post('/carts/remove', {
+                    product_id: product.id,
+                    guest_id: guestId
+                })
+                    .then(() => {
+                        // Refresh cart after removing the item
+                        refreshCart();
+                        Swal.fire('Removed!', `${product.name} has been removed from your cart.`, 'success');
+                    })
+                    .catch((error) => {
+                        console.error('Error removing from cart:', error);
+                        Swal.fire('Error!', 'There was an error removing the product from your cart.', 'error');
+                    });
+            }
+        });
+    };
+
+    // Refresh cart data
+    const refreshCart = () => {
+        if (guestId) {
+            axios.get(`/carts/index/${guestId}`)
+                .then((response) => {
+                    const cartData = response.data.cart || {};
+                    setCart(cartData); // Set cart as the entire cart object
+                })
+                .catch((error) => {
+                    console.error('Error refreshing cart:', error);
+                });
+        }
     };
 
     return (
@@ -70,8 +151,8 @@ const App = () => {
                         {products.length === 0 ? (
                             <p className="text-gray-500">Loading products...</p>
                         ) : (
-                            products.map((product, index) => (
-                                <div key={index} className="bg-gray-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                            products.map((product) => (
+                                <div key={product.id} className="bg-gray-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                                     <p className="text-lg font-bold text-gray-900 mb-2">{product.name}</p>
                                     <p className="text-gray-700 mb-2">Price: ${product.price}</p>
                                     <p className={`mb-2 ${product.in_cart ? 'text-green-600' : 'text-red-500'}`}>
@@ -81,11 +162,11 @@ const App = () => {
                                         type="number"
                                         min="1"
                                         placeholder="Quantity"
-                                        id={`quantity-${index}`}
+                                        id={`quantity-${product.id}`}
                                         className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                                     />
                                     <button
-                                        onClick={() => addToCart(product, document.getElementById(`quantity-${index}`).value)}
+                                        onClick={() => addToCart(product)}
                                         disabled={product.in_cart}
                                         className={`w-full p-3 rounded-lg font-semibold text-white transition ${
                                             product.in_cart
@@ -93,7 +174,7 @@ const App = () => {
                                                 : 'bg-blue-500 hover:bg-blue-600 focus:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
                                         }`}
                                     >
-                                        {product.in_cart ? 'Already in Cart' : 'Add to Cart'}
+                                        {'Add to Cart'}
                                     </button>
                                 </div>
                             ))
@@ -104,17 +185,27 @@ const App = () => {
                 {/* Right Section: Cart */}
                 <div className="bg-white shadow-lg rounded-lg p-8">
                     <h2 className="text-2xl font-semibold text-gray-700 mb-6">Your Cart</h2>
-                    {cart && cart.length === 0 ? ( // Ensure cart is checked for null/undefined
+                    {cart.products && cart.products.length === 0 ? (
                         <p className="text-gray-500">Your cart is empty.</p>
                     ) : (
                         <ul className="space-y-4">
-                            {cart.map((item, index) => (
+                            {cart.products && cart.products.map((item, index) => (
                                 <li key={index} className="bg-gray-100 p-4 rounded-lg shadow-md">
-                                    {item.name} - {item.quantity} x ${item.price}
+                                    {item.name} - {item.pivot.quantity} x ${item.price}
+                                    <button
+                                        onClick={() => removeFromCart(item)}
+                                        className="ml-4 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+                                    >
+                                        Remove
+                                    </button>
                                 </li>
                             ))}
                         </ul>
                     )}
+                    <div className="mt-4">
+                        <p className="font-semibold text-lg">Total Items: {cart.total_items || 0}</p>
+                        <p className="font-semibold text-lg">Total Price: ${cart.total_price || 0}</p>
+                    </div>
                 </div>
             </div>
         </div>

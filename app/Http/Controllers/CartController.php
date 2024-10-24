@@ -31,10 +31,12 @@ class CartController extends Controller
     public function add(AddToCartRequest $request): JsonResponse
     {
         // check if the cart exists
-        $cart = Cart::query()->where('guest_id', $request->input('guest_id'))->firstOrFail();
+        $cart = Cart::query()->where('guest_id', $request->input('guest_id'))->first();
         if  (! $cart) {
             $cart = Cart::query()->create([
                 'guest_id' => $request->input('guest_id'),
+                'total_items' => 0,
+                'total_price' => 0,
             ]);
         }
 
