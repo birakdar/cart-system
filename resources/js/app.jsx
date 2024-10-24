@@ -138,6 +138,32 @@ const App = () => {
         }
     };
 
+    // Handle Clear Cart
+    const clearCart = () => {
+        Swal.fire({
+            title: 'Clear Cart',
+            text: 'Are you sure you want to clear your cart?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, clear it!',
+            cancelButtonText: 'No, keep it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Call API to clear the cart
+                axios.get(`/carts/clear/${guestId}`)
+                    .then(() => {
+                        // Refresh cart after clearing
+                        refreshCart();
+                        Swal.fire('Cleared!', 'Your cart has been cleared.', 'success');
+                    })
+                    .catch((error) => {
+                        console.error('Error clearing cart:', error);
+                        Swal.fire('Error!', 'There was an error clearing your cart.', 'error');
+                    });
+            }
+        });
+    };
+
     return (
         <div className="container mx-auto p-8">
             <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
@@ -181,7 +207,7 @@ const App = () => {
                 {/* Right Section: Cart */}
                 <div className="bg-white shadow-lg rounded-lg p-8">
                     <h2 className="text-2xl font-semibold text-gray-700 mb-6">Your Cart</h2>
-                    {cart.products && cart.products.length === 0 ? (
+                    {!cart || !cart.products || cart.products.length === 0 ? (
                         <p className="text-gray-500">Your cart is empty.</p>
                     ) : (
                         <>
@@ -201,6 +227,12 @@ const App = () => {
                             <div className="mt-4">
                                 <p className="font-semibold text-lg">Total Items: {cart.total_items || 0}</p>
                                 <p className="font-semibold text-lg">Total Price: ${cart.total_price || 0}</p>
+                                <button
+                                    onClick={clearCart}
+                                    className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+                                >
+                                    Clear Cart
+                                </button>
                             </div>
                         </>
                     )}
