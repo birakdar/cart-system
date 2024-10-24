@@ -70,7 +70,7 @@ class CartController extends Controller
         $cart->products()->detach($request->input('product_id'));
         $cart->update([
             'total_items' => $cart->products()->sum('quantity'),
-            'total_price' => $cart->products()->sum('quantity * price'),
+            'total_price' => $cart->products()->sum(DB::raw('quantity * price')),
         ]);
 
         return response()->json();
