@@ -6,6 +6,7 @@ use App\Http\Requests\AddToCartRequest;
 use App\Http\Requests\RemoveFromCartRequest;
 use App\Models\Cart;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
@@ -57,7 +58,7 @@ class CartController extends Controller
         // update the total items and total price
         $cart->update([
             'total_items' => $cart->products()->sum('quantity'),
-            'total_price' => $cart->products()->sum('quantity * price'),
+            'total_price' => $cart->products()->sum(DB::raw('quantity * price')),
         ]);
 
         return response()->json();
