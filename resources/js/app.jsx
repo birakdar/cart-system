@@ -85,6 +85,7 @@ const App = () => {
                         // Refresh cart after adding the item
                         refreshCart();
                         Swal.fire('Added!', `${product.name} has been added to your cart.`, 'success');
+                        quantityInput.value = '';
                     })
                     .catch((error) => {
                         console.error('Error adding to cart:', error);
@@ -167,12 +168,7 @@ const App = () => {
                                     />
                                     <button
                                         onClick={() => addToCart(product)}
-                                        disabled={product.in_cart}
-                                        className={`w-full p-3 rounded-lg font-semibold text-white transition ${
-                                            product.in_cart
-                                                ? 'bg-gray-400 cursor-not-allowed'
-                                                : 'bg-blue-500 hover:bg-blue-600 focus:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
-                                        }`}
+                                        className={`w-full p-3 rounded-lg font-semibold text-white transition bg-blue-500 hover:bg-blue-600 focus:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500`}
                                     >
                                         {'Add to Cart'}
                                     </button>
@@ -188,24 +184,26 @@ const App = () => {
                     {cart.products && cart.products.length === 0 ? (
                         <p className="text-gray-500">Your cart is empty.</p>
                     ) : (
-                        <ul className="space-y-4">
-                            {cart.products && cart.products.map((item, index) => (
-                                <li key={index} className="bg-gray-100 p-4 rounded-lg shadow-md">
-                                    {item.name} - {item.pivot.quantity} x ${item.price}
-                                    <button
-                                        onClick={() => removeFromCart(item)}
-                                        className="ml-4 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
-                                    >
-                                        Remove
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                        <>
+                            <ul className="space-y-4">
+                                {cart.products && cart.products.map((item, index) => (
+                                    <li key={index} className="bg-gray-100 p-4 rounded-lg shadow-md">
+                                        {item.name} - {item.pivot.quantity} x ${item.price}
+                                        <button
+                                            onClick={() => removeFromCart(item)}
+                                            className="ml-4 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 transition"
+                                        >
+                                            Remove
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                            <div className="mt-4">
+                                <p className="font-semibold text-lg">Total Items: {cart.total_items || 0}</p>
+                                <p className="font-semibold text-lg">Total Price: ${cart.total_price || 0}</p>
+                            </div>
+                        </>
                     )}
-                    <div className="mt-4">
-                        <p className="font-semibold text-lg">Total Items: {cart.total_items || 0}</p>
-                        <p className="font-semibold text-lg">Total Price: ${cart.total_price || 0}</p>
-                    </div>
                 </div>
             </div>
         </div>
@@ -215,6 +213,6 @@ const App = () => {
 const root = ReactDOM.createRoot(document.getElementById('app'));
 root.render(
     <Provider store={store}>
-        <App />
+        <App/>
     </Provider>
 );
