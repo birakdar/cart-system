@@ -41,12 +41,15 @@ class CartController extends Controller
         }
 
         // check if the product is already in the cart, if so update the quantity otherwise attach the product
-        if ($cart->products()->where('product_id', $request->input('product_id'))->exists()) {
-            $cart->products()->updateExistingPivot($request->input('product_id'), [
-                'quantity' => $request->input('quantity'),
+        $products = $cart->products();
+        if ($products->where('product_id', $request->input('product_id'))->exists()) {
+            //add the quantity to the existing quantity
+            $oldQuantity = $products->where('product_id', $request->input('product_id'))->first()->pivot->quantity;
+            $products->updateExistingPivot($request->input('product_id'), [
+                'quantity' => $oldQuantity + $request->input('quantity'),
             ]);
         } else {
-            $cart->products()->attach($request->input('product_id'), [
+            $products->attach($request->input('product_id'), [
                 'quantity' => $request->input('quantity'),
             ]);
         }
